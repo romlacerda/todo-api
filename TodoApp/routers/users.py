@@ -7,8 +7,8 @@ from ..database import SessionLocal
 from .auth import bcrypt_context, get_current_user
 
 router = APIRouter(
-    prefix='/users',
-    tags=['users']
+    prefix='/user',
+    tags=['user']
 )
 
 def get_db():
@@ -27,11 +27,14 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     new_password_confirm: str
     
+class PhoneNumberRequest(BaseModel):
+    phone_number: str
     
-@router.get("/user", status_code=status.HTTP_200_OK)
+    
+@router.get("/", status_code=status.HTTP_200_OK)
 async def get_user(user: user_dependency, db: db_dependency):
-    user_model = db.query(Users).filter(Users.id == user.get("id")).first()
-    
+    user_model = db.query(Users).filter(Users.id == user.id).first()
+
     if user_model is not None:
         return user_model
     
@@ -55,12 +58,12 @@ async def change_password(user: user_dependency, db: db_dependency, password_dat
     db.commit()
     
 @router.put("/change-phone-number", status_code=status.HTTP_204_NO_CONTENT)
-async def change_phone_number(user: user_dependency, db: db_dependency, phone_number: str):
+async def change_phone_number(user: user_dependency, db: db_dependency, request: PhoneNumberRequest):
     user_model = db.query(Users).filter(Users.id == user.id).first()
     
     if user_model is None:
         raise HTTPException(status_code=404, detail="User not found")
     
-    user_model.phone_number = phone_number
+    user_model.phone_number = request.phone_number
     db.add(user_model)
     db.commit()
